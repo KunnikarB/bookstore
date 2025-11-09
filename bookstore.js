@@ -66,20 +66,21 @@ const calculateTotal = (cart) => {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const totalWithTax = subtotal * 1.1; // 10% tax
+  const totalWithTax = subtotal * 1.1; 
   return parseFloat(totalWithTax.toFixed(2));
 };
 
+// Process payment simulation with random success/failure
 const processPayment = (cartTotal, paymentMethod) => {
-  // Simulate random success/failure
-  const success = Math.random() > 0.2; // 80% success rate
+  const success = Math.random() > 0.2;
   const transactionId = success
-    ? `TXN-${Math.floor(Math.random() * 1000000)}`
+    ? `TXN-${Math.floor(Math.random() * 1000)}`
     : null;
 
   return { success, transactionId, paymentMethod, amount: cartTotal };
 };
 
+// reduce stock based on cart contents
 const updateInventory = (cart) => {
   cart.forEach((item) => {
     const book = books.find((b) => b.id === item.id);
@@ -121,7 +122,6 @@ const completePurchase = (searchQuery, bookId, quantity, paymentMethod) => {
       message: "Purchase completed successfully!",
     };
 
-    // Reset cart after successful order
     cart = [];
 
     return order;
