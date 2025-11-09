@@ -2,9 +2,10 @@ import {
   searchBooks,
   addToCart,
   calculateTotal,
-  processPayment,
+  setPaymentMock,
   updateInventory,
   completePurchase,
+  applyDiscount
 } from './bookstore.js';
 
 import { jest } from '@jest/globals'; 
@@ -91,6 +92,49 @@ describe('Bookstore Integration Tests', () => {
       const fakeCart = [{ id: 999, quantity: 1 }];
       expect(() => updateInventory(fakeCart)).toThrow(
         'Book not found in inventory'
+      );
+    });
+  });
+
+  describe('Advanced Features', () => {
+    test('should apply coupon discount correctly', () => {
+      setPaymentMock(() => ({
+        success: true,
+        transactionId: 'TXN-999',
+        paymentMethod: 'credit-card',
+        amount: 0, 
+      }));
+
+      const result = completePurchase(
+        'Star Wars',
+        2,
+        2,
+        'credit-card',
+        'SAVE10'
+      );
+
+      const expectedTotal = applyDiscount(
+        calculateTotal([{ id: 2, price: 40, quantity: 2 }]),
+        'SAVE10'
+      );
+
+      expect(result.total).toBeCloseTo(expectedTotal);
+      expect(result.message).toBe('Purchase completed successfully!');
+    });
+
+    test('should generate low stock alerts when stock <= 2', () => {
+      addToCart(2, 3); 
+
+      setPaymentMock(() => ({
+        success: true,
+        transactionId: 'TXN-888',
+        paymentMethod: 'credit-card',
+        amount: 0,
+      }));
+
+      const result = completePurchase('Star Wars', 2, 3, 'credit-card');
+      expect(result.lowStockAlerts).toContain(
+        'Star Wars stock is low (2 left)'
       );
     });
   });

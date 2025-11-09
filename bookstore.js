@@ -92,26 +92,46 @@ const updateInventory = (cart) => {
   return books;
 };
 
+// --- DISCOUNT SYSTEM ---
+const coupons = {
+  SAVE10: 0.1,  
+  SAVE20: 0.2,  
+};
+
+const applyDiscount = (total, couponCode) => {
+  if (!couponCode) return total;
+  const discount = coupons[couponCode.toUpperCase()] || 0;
+  return parseFloat((total * (1 - discount)).toFixed(2));
+};
+
+
 // --- MAIN INTEGRATION FUNCTION ---
 
-const completePurchase = (searchQuery, bookId, quantity, paymentMethod) => {
+const completePurchase = (searchQuery, bookId, quantity, paymentMethod, couponCode) => {
   try {
     // 1. Search for books
     const results = searchBooks(searchQuery);
-    if (results.length === 0) throw new Error("No books found");
+    if (results.length === 0) throw new Error('No books found');
 
     // 2. Add to cart
     const updatedCart = addToCart(bookId, quantity);
 
     // 3. Calculate total
     const total = calculateTotal(updatedCart);
+    // Apply discount if coupon code is provided
+    total = applyDiscount(total, couponCode);
 
     // 4. Process payment
     const payment = processPayment(total, paymentMethod);
-    if (!payment.success) throw new Error("Payment failed");
+    if (!payment.success) throw new Error('Payment failed');
 
     // 5. Update inventory
     updateInventory(updatedCart);
+
+    // --- INVENTORY ALERTS ---
+    const lowStockAlerts = updatedCart
+      .filter((item) => item.stock <= 2)
+      .map((item) => `${item.title} stock is low (${item.stock} left)`);
 
     // 6. Return order confirmation
     const order = {
@@ -119,7 +139,7 @@ const completePurchase = (searchQuery, bookId, quantity, paymentMethod) => {
       items: updatedCart,
       total,
       paymentMethod,
-      message: "Purchase completed successfully!",
+      message: 'Purchase completed successfully!',
     };
 
     cart = [];
@@ -134,7 +154,6 @@ export {
   searchBooks,
   addToCart,
   calculateTotal,
-  processPayment,
   updateInventory,
   completePurchase,
 };
