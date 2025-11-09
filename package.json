@@ -1,0 +1,24 @@
+{
+  "name": "bookstore",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 jest --silent"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KunnikarB/bookstore.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/KunnikarB/bookstore/issues"
+  },
+  "homepage": "https://github.com/KunnikarB/bookstore#readme",
+  "devDependencies": {
+    "jest": "^30.2.0"
+  }
+}
