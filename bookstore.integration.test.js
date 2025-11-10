@@ -71,6 +71,10 @@ describe('Bookstore Integration Tests', () => {
       const payment = mockPayment(total, 'card');
       expect(payment.success).toBe(false);
 
+      if (payment.success) {
+        updateInventory([{ id: 3, price: 28, quantity: 2 }]);
+      }
+
       const after = searchBooks('Pettson')[0].stock;
       expect(after).toBe(before);
     });
