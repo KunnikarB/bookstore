@@ -43,12 +43,12 @@ describe('Bookstore Integration Tests', () => {
       expect(total).toBeCloseTo((32 * 1 + 40 * 2) * 1.1);
     });
 
-    // test('should reset cart after successful purchase', () => {
-    //   completePurchase('Star Wars', 2, 1, 'paypal');
-    //   const result = addToCart(3, 1);
-    //   expect(result.length).toBe(1);
-    //   expect(result[0].id).toBe(3);
-    // });
+    test('should reset cart after successful purchase', () => {
+      completePurchase('Star Wars', 2, 1, 'paypal');
+      const result = addToCart(3, 1);
+      expect(result.length).toBe(1);
+      expect(result[0].id).toBe(3);
+    });
   });
 
   describe('Error Handling', () => {
