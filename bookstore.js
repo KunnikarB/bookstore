@@ -1,4 +1,4 @@
-const books = [
+let initialBooks = [
   {
     id: 1,
     title: 'Eloquent JavaScript',
@@ -27,14 +27,11 @@ const books = [
     price: 28,
     stock: 8,
   },
-  {
-    id: 5,
-    title: 'The Godfather',
-    author: 'Mark Seal',
-    price: 30,
-    stock: 9,
-  },
+  { id: 5, title: 'The Godfather', author: 'Mark Seal', price: 30, stock: 9 },
 ];
+
+// we clone this array when resetting
+let books = structuredClone(initialBooks);
 
 const searchBooks = (query) => {
   const lowerQuery = query.toLowerCase();
@@ -66,21 +63,22 @@ const calculateTotal = (cart) => {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const totalWithTax = subtotal * 1.1; 
+  const totalWithTax = subtotal * 1.1;
   return parseFloat(totalWithTax.toFixed(2));
 };
 
-// Process payment simulation with random success/failure
-const processPayment = (cartTotal, paymentMethod) => {
+let paymentProcessor = (total, method) => {
   const success = Math.random() > 0.2;
   const transactionId = success
     ? `TXN-${Math.floor(Math.random() * 1000)}`
     : null;
-
-  return { success, transactionId, paymentMethod, amount: cartTotal };
+  return { success, transactionId, paymentMethod: method, amount: total };
 };
 
-// reduce stock based on cart contents
+const setPaymentMock = (mockFn) => {
+  paymentProcessor = mockFn;
+};
+
 const updateInventory = (cart) => {
   cart.forEach((item) => {
     const book = books.find((b) => b.id === item.id);
@@ -92,56 +90,57 @@ const updateInventory = (cart) => {
   return books;
 };
 
-// --- DISCOUNT SYSTEM ---
-const coupons = {
-  SAVE10: 0.1,  
-  SAVE20: 0.2,  
-};
-
+const coupons = { SAVE10: 0.1, SAVE20: 0.2 };
 const applyDiscount = (total, couponCode) => {
   if (!couponCode) return total;
   const discount = coupons[couponCode.toUpperCase()] || 0;
   return parseFloat((total * (1 - discount)).toFixed(2));
 };
 
-
-// --- MAIN INTEGRATION FUNCTION ---
-
-const completePurchase = (searchQuery, bookId, quantity, paymentMethod, couponCode) => {
+const completePurchase = (
+  searchQuery,
+  bookId,
+  quantity,
+  paymentMethod,
+  couponCode
+) => {
   try {
-    // 1. Search for books
+    // 🧹 reset everything fresh for each purchase
+    books = structuredClone(initialBooks);
+    cart = [];
+
     const results = searchBooks(searchQuery);
     if (results.length === 0) throw new Error('No books found');
 
-    // 2. Add to cart
     const updatedCart = addToCart(bookId, quantity);
 
-    // 3. Calculate total
-    const total = calculateTotal(updatedCart);
-    // Apply discount if coupon code is provided
+    let total = calculateTotal(updatedCart);
     total = applyDiscount(total, couponCode);
 
-    // 4. Process payment
-    const payment = processPayment(total, paymentMethod);
+    const payment = paymentProcessor(total, paymentMethod);
     if (!payment.success) throw new Error('Payment failed');
 
-    // 5. Update inventory
     updateInventory(updatedCart);
 
-    // --- INVENTORY ALERTS ---
     const lowStockAlerts = updatedCart
-      .filter((item) => item.stock <= 2)
-      .map((item) => `${item.title} stock is low (${item.stock} left)`);
+      .map((item) => {
+        const currentBook = books.find((b) => b.id === item.id);
+        return currentBook.stock <= 2
+          ? `${currentBook.title} stock is low (${currentBook.stock} left)`
+          : null;
+      })
+      .filter(Boolean);
 
-    // 6. Return order confirmation
     const order = {
       orderId: payment.transactionId,
       items: updatedCart,
       total,
       paymentMethod,
       message: 'Purchase completed successfully!',
+      lowStockAlerts,
     };
 
+    // 🧹 clear cart after purchase
     cart = [];
 
     return order;
@@ -154,9 +153,8 @@ export {
   searchBooks,
   addToCart,
   calculateTotal,
+  setPaymentMock,
   updateInventory,
   completePurchase,
+  applyDiscount,
 };
-
-
-
